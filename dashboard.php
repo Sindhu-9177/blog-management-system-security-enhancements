@@ -10,155 +10,271 @@ if(!isset($_SESSION['user']))
 
 include 'db.php';
 
-$result=mysqli_query(
+$search = "";
+
+if(isset($_GET['search']))
+{
+    $search = $_GET['search'];
+}
+
+$limit = 5;
+
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+
+$start = ($page - 1) * $limit;
+
+$query = "
+SELECT * FROM posts
+WHERE title LIKE '%$search%'
+OR content LIKE '%$search%'
+ORDER BY id DESC
+LIMIT $start, $limit
+";
+
+$result = mysqli_query($conn, $query);
+
+$count_query = mysqli_query(
 $conn,
-"SELECT * FROM posts"
+"SELECT COUNT(*) AS total
+FROM posts
+WHERE title LIKE '%$search%'
+OR content LIKE '%$search%'"
 );
 
-$total_posts=mysqli_num_rows($result);
+$count_row = mysqli_fetch_assoc($count_query);
+
+$total_posts = $count_row['total'];
+
+$total_pages = ceil($total_posts / $limit);
 
 ?>
 
 <!DOCTYPE html>
 <html>
+
 <head>
 
-<title>Dashboard</title>
+    <title>📚 Blog Dashboard</title>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 
 </head>
 
 <body>
 
-<nav class="navbar navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow">
 
-<div class="container-fluid">
+    <div class="container-fluid">
 
-<h3 class="text-white">
-Blog Management System
-</h3>
+        <h3 class="text-white mb-0">
+            Blog Management System
+        </h3>
 
-<div>
+        <div>
 
-<span class="text-white me-3">
+            <span class="text-white me-3">
+                👋 Welcome Back, <?= $_SESSION['user']; ?>
+            </span>
 
-Welcome,
-<?= $_SESSION['user']; ?>
+            <a
+            href="logout.php"
+            class="btn btn-danger">
+                Logout
+            </a>
 
-</span>
+        </div>
 
-<a
-href="logout.php"
-class="btn btn-danger">
-
-Logout
-
-</a>
-
-</div>
-
-</div>
+    </div>
 
 </nav>
 
 <div class="container mt-4">
 
-<div class="row">
+    <!-- Hero Section -->
 
-<div class="col-md-4">
+    <div class="card shadow border-0 mb-4">
 
-<div class="card shadow stats-card">
+        <div class="card-body text-center p-4">
 
-<div class="card-body">
+            <h1 class="display-5">
+                Blog Management Dashboard
+            </h1>
 
-<h5>Total Posts</h5>
+            <p class="text-muted">
+                Manage posts, search content and track blog activity.
+            </p>
 
-<h2>
+        </div>
 
-<?= $total_posts; ?>
+    </div>
 
-</h2>
+    <!-- Search Box -->
 
-</div>
+    <form method="GET" class="mb-4">
 
-</div>
+        <div class="input-group">
 
-</div>
+            <input
+            type="text"
+            name="search"
+            class="form-control"
+            placeholder="Search posts by title or content..."
+            value="<?= $search; ?>">
 
-</div>
+            <button
+            class="btn btn-primary"
+            type="submit">
+                Search
+            </button>
 
-<a
-href="add_post.php"
-class="btn btn-primary mt-4 mb-3">
+        </div>
 
-+ Add New Post
+    </form>
+    <p class="text-muted">
+    Total Results: <?= $total_posts; ?>
+</p>
 
-</a>
+    <!-- Statistics Card -->
 
-<table class="table table-bordered table-hover shadow bg-white">
+    <div class="row mb-4">
 
-<thead class="table-dark">
+        <div class="col-md-4">
 
-<tr>
+            <div class="card shadow border-0 bg-primary text-white">
 
-<th>ID</th>
-<th>Title</th>
-<th>Content</th>
-<th>Actions</th>
+                <div class="card-body">
 
-</tr>
+                    <h5>Total Posts</h5>
 
-</thead>
+                    <h2>
+                        <?= $total_posts; ?>
+                    </h2>
 
-<tbody>
+                </div>
 
-<?php while($row=mysqli_fetch_assoc($result)){ ?>
+            </div>
 
-<tr>
+        </div>
 
-<td><?= $row['id']; ?></td>
+    </div>
 
-<td><?= $row['title']; ?></td>
+    <!-- Add Post Button -->
 
-<td><?= $row['content']; ?></td>
+    <a
+    href="add_post.php"
+    class="btn btn-success mb-3">
 
+        ➕ Create New Blog Post
+
+    </a>
+
+    <!-- Posts Table -->
+     <div class="table-responsive">
+
+    <table class="table table-bordered table-hover shadow bg-white">
+
+        <thead class="table-dark">
+
+            <tr>
+
+                <th>ID</th>
+                <th>Title</th>
+                <th>Content</th>
+                <th>Created Date</th>
+                <th>Actions</th>
+
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+        <?php while($row = mysqli_fetch_assoc($result)){ ?>
+
+            <tr>
+
+                <td><?= $row['id']; ?></td>
+
+                <td><?= $row['title']; ?></td>
+
+                <td>
+<?= strlen($row['content']) > 50 ? substr($row['content'], 0, 50).'...' : $row['content']; ?>
+</td>
 <td>
-
-<a
-href="edit_post.php?id=<?=$row['id'];?>"
-class="btn btn-warning btn-sm">
-
-Edit
-
-</a>
-
-<a
-href="delete_post.php?id=<?=$row['id'];?>"
-class="btn btn-danger btn-sm"
-onclick="return confirm('Delete this post?')">
-
-Delete
-
-</a>
-
+<?= date('d M Y', strtotime($row['created_at'])); ?>
 </td>
 
-</tr>
+                <td>
 
-<?php } ?>
+                    <a
+                    href="edit_post.php?id=<?= $row['id']; ?>"
+                    class="btn btn-warning btn-sm">
 
-</tbody>
+                        Edit
 
-</table>
+                    </a>
+
+                    <a
+                    href="delete_post.php?id=<?= $row['id']; ?>"
+                    class="btn btn-danger btn-sm"
+                    onclick="return confirm('Delete this post?')">
+
+                        Delete
+
+                    </a>
+
+                </td>
+
+            </tr>
+
+        <?php } ?>
+
+        </tbody>
+
+    </table>
+    </div>
+
+    <!-- Pagination -->
+
+    <?php if($total_pages > 1){ ?>
+
+    <nav>
+
+        <ul class="pagination justify-content-center">
+
+            <?php
+            for($i = 1; $i <= $total_pages; $i++)
+            {
+            ?>
+
+            <li class="page-item <?= ($page == $i) ? 'active' : ''; ?>">
+
+                <a
+                class="page-link"
+                href="?page=<?= $i; ?>&search=<?= $search; ?>">
+
+                    <?= $i; ?>
+
+                </a>
+
+            </li>
+
+            <?php } ?>
+
+        </ul>
+
+    </nav>
+
+    <?php } ?>
 
 </div>
 
-<footer class="text-center mt-5 mb-3 text-muted">
+<footer class="bg-dark text-white text-center p-3 mt-5">
 
-Blog Management System © 2026
+    Blog Management System © 2026
 
 </footer>
 
