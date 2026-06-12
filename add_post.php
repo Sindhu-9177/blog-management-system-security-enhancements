@@ -14,13 +14,30 @@ if(isset($_POST['save']))
 {
     $title = $_POST['title'];
     $content = $_POST['content'];
+    if(empty($title) || empty($content))
+{
+    die("Title and Content are required.");
+}
 
-    mysqli_query(
-        $conn,
-        "INSERT INTO posts(title,content)
-         VALUES('$title','$content')"
-    );
+if(strlen($title) < 3)
+{
+    die("Title must contain at least 3 characters.");
+}
 
+    $stmt = mysqli_prepare(
+$conn,
+"INSERT INTO posts(title,content)
+VALUES(?,?)"
+);
+
+mysqli_stmt_bind_param(
+$stmt,
+"ss",
+$title,
+$content
+);
+
+mysqli_stmt_execute($stmt);
     header("Location: dashboard.php");
     exit();
 }

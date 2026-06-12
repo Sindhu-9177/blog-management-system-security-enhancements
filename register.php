@@ -10,13 +10,32 @@ if(isset($_POST['register']))
         $_POST['password'],
         PASSWORD_DEFAULT
     );
+     // Validation
+    if(strlen($username) < 3)
+    {
+        die("Username too short.");
+    }
 
-    $sql="INSERT INTO users(username,password)
-    VALUES('$username','$password')";
+    if(strlen($password) < 6)
+    {
+        die("Password must be at least 6 characters.");
+    }
 
-    mysqli_query($conn,$sql);
 
-    header("Location: login.php");
+$stmt = mysqli_prepare(
+$conn,
+"INSERT INTO users(username,password)
+VALUES(?,?)"
+);
+
+mysqli_stmt_bind_param(
+$stmt,
+"ss",
+$username,
+$password
+);
+
+mysqli_stmt_execute($stmt);
 }
 ?>
 

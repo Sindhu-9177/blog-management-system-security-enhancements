@@ -4,19 +4,37 @@ include 'db.php';
 
 if(isset($_POST['login']))
 {
-    $username=$_POST['username'];
-    $password=$_POST['password'];
+    $username = $_POST['username'];
+    $password = $_POST['password'];
 
-    $sql="SELECT * FROM users WHERE username='$username'";
-    $result=mysqli_query($conn,$sql);
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT * FROM users WHERE username=?"
+    );
 
-    $user=mysqli_fetch_assoc($result);
+    mysqli_stmt_bind_param(
+        $stmt,
+        "s",
+        $username
+    );
 
-    if($user && password_verify($password,$user['password']))
+    mysqli_stmt_execute($stmt);
+
+    $result = mysqli_stmt_get_result($stmt);
+
+    $user = mysqli_fetch_assoc($result);
+
+    if($user && password_verify($password, $user['password']))
     {
-        $_SESSION['user']=$username;
+        $_SESSION['user'] = $user['username'];
+        $_SESSION['role'] = $user['role'];
+
         header("Location: dashboard.php");
         exit();
+    }
+    else
+    {
+        echo "<script>alert('Invalid Username or Password');</script>";
     }
 }
 ?>
@@ -24,11 +42,13 @@ if(isset($_POST['login']))
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>Login</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <link rel="stylesheet" href="css/style.css">
+
 </head>
 
 <body>

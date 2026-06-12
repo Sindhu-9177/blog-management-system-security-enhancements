@@ -75,7 +75,12 @@ $total_pages = ceil($total_posts / $limit);
         <div>
 
             <span class="text-white me-3">
-                👋 Welcome Back, <?= $_SESSION['user']; ?>
+                👋 Welcome Back, Welcome,
+<?= $_SESSION['user']; ?>
+
+<span class="badge bg-success ms-2">
+<?= ucfirst($_SESSION['role']); ?>
+</span>
             </span>
 
             <a
@@ -140,19 +145,21 @@ $total_pages = ceil($total_posts / $limit);
 
     <div class="row mb-4">
 
-        <div class="col-md-4">
+    <div class="col-md-4">
 
-            <div class="card shadow border-0 bg-primary text-white">
+        <div class="card shadow border-0 bg-primary text-white">
 
-                <div class="card-body">
+            <div class="card-body">
 
-                    <h5>Total Posts</h5>
+                <h5>Total Posts</h5>
 
-                    <h2>
-                        <?= $total_posts; ?>
-                    </h2>
+                <h2>
+                    <?= $total_posts; ?>
+                </h2>
 
-                </div>
+                <p class="mb-0">
+                    Active Blog Records
+                </p>
 
             </div>
 
@@ -160,6 +167,27 @@ $total_pages = ceil($total_posts / $limit);
 
     </div>
 
+    <div class="col-md-4">
+
+        <div class="card shadow border-0 bg-success text-white">
+
+            <div class="card-body">
+
+                <h5>Security Status</h5>
+
+                <h2>Protected</h2>
+
+                <p class="mb-0">
+                    Prepared Statements Enabled
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
     <!-- Add Post Button -->
 
     <a
@@ -217,14 +245,16 @@ $total_pages = ceil($total_posts / $limit);
 
                     </a>
 
-                    <a
-                    href="delete_post.php?id=<?= $row['id']; ?>"
-                    class="btn btn-danger btn-sm"
-                    onclick="return confirm('Delete this post?')">
+                    <?php if($_SESSION['role']=="admin"){ ?>
 
-                        Delete
+<a
+href="delete_post.php?id=<?=$row['id'];?>"
+class="btn btn-danger btn-sm"
+onclick="return confirm('Delete this post?')">
+Delete
+</a>
 
-                    </a>
+<?php } ?>
 
                 </td>
 

@@ -13,10 +13,20 @@ include 'db.php';
 
 $id = $_GET['id'];
 
-$result = mysqli_query(
+$stmt = mysqli_prepare(
     $conn,
-    "SELECT * FROM posts WHERE id=$id"
+    "SELECT * FROM posts WHERE id=?"
 );
+
+mysqli_stmt_bind_param(
+    $stmt,
+    "i",
+    $id
+);
+
+mysqli_stmt_execute($stmt);
+
+$result = mysqli_stmt_get_result($stmt);
 
 $row = mysqli_fetch_assoc($result);
 
@@ -25,13 +35,23 @@ if(isset($_POST['update']))
     $title = $_POST['title'];
     $content = $_POST['content'];
 
-    mysqli_query(
-        $conn,
-        "UPDATE posts
-         SET title='$title',
-             content='$content'
-         WHERE id=$id"
-    );
+    $stmt = mysqli_prepare(
+    $conn,
+    "UPDATE posts
+     SET title=?,
+         content=?
+     WHERE id=?"
+);
+
+mysqli_stmt_bind_param(
+    $stmt,
+    "ssi",
+    $title,
+    $content,
+    $id
+);
+
+mysqli_stmt_execute($stmt);
 
     header("Location: dashboard.php");
     exit();
